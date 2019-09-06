@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# To run totkbs, use python 2.7 and install dependencies with "pip install -r requirements.txt"
+# To run totkbs, use python 3 and install dependencies with "pip install -r requirements.txt"
 
 import os
 from TkbsApiClient import TranskribusClient
@@ -18,7 +18,7 @@ import ast
 
 def log(s_or_e, msg):
     label = ["STARTING: ", "DONE WITH: "]
-    print label[s_or_e] + msg
+    print (label[s_or_e] + msg)
 
 # OCR Pipeline: From Legacy through PAGE.xml to XML-TEI
 # The data flow includes the following suggested steps, which can be modified as needed:
@@ -40,7 +40,7 @@ def get_coords(filename, article, ispagefile):
     if not ispagefile:
         elem = tree.xpath('//XMD-entity')
         if elem[0].get("ID") != article:
-            print "Getting coordinates: seems to be wrong article file"
+            print ("Getting coordinates: seems to be wrong article file")
         return elem[0].get("BOX").split()
     if ispagefile:
         for entity in tree.xpath('//Entity'):
@@ -71,7 +71,7 @@ def get_files(issue):
         if article_f and page_f:
             break
     if not article_f and not page_f:
-        print "Required files in \"{}\" not found! Check if this directory belongs here. Trying again nonetheless.".format(path)
+        print ("Required files in \"{}\" not found! Check if this directory belongs here. Trying again nonetheless.".format(path))
         return get_files(issue)
     article = article_f[:len(article_f)-4]
     return [article, os.path.join(path, article_f), os.path.join(path, page_f)]
@@ -145,7 +145,7 @@ def tkbs_login():
     # use TrpServer not TrpServerTesting
     tkbs = TranskribusClient(sServerUrl='https://transkribus.eu/TrpServer')
     if tkbs.auth_login(config['user'], config['key'], True) is False:
-        print "transkribus login error"
+        print ("transkribus login error")
         #print("session id: " + tkbs.getSessionId())
     return tkbs
 
@@ -179,17 +179,17 @@ def get_pagelist(upid):
             cinfo = tkbs.getDocByIdAsXml(config['collection'],upid, nrOfTranscripts=0,bParse=False)
         except requests.exceptions.HTTPError as e:
             if int(e.response.status_code) == 404 and tries <= 5:
-                print "Can't access the uploaded document: Transkribus hasn't yet refreshed their server. Trying again " + str(tries) + "/5."
+                print ("Can't access the uploaded document: Transkribus hasn't yet refreshed their server. Trying again " + str(tries) + "/5.")
                 tkbs.cleanPersistentSession()
                 tkbs.auth_logout()
                 time.sleep(timeout*tries)
                 tkbs = tkbs_login()
                 tries += 1
-                print e
+                print (e)
                 continue
             else:
                 break
-        print "Accessed!"
+        print ("Accessed!")
         break
 
     cinfoxml = ET.fromstring(cinfo)
@@ -220,7 +220,7 @@ def download_tkbsdoc(upid):
         response = tkbs.download_document(config['collection'], upid, os.path.join(paper, config['tkribus_dir']))
     except Exception as e:
         if str(e).find("unless bForce=True") > -1:
-            force_dwnld = raw_input("Overwrite? [yes/no] ")
+            force_dwnld = input("Overwrite? [yes/no] ")
             if force_dwnld.lower() == "yes":
                 response = tkbs.download_document(config['collection'], upid, os.path.join(paper, config['tkribus_dir']), bForce=True)
     log(1,"download")
@@ -281,17 +281,17 @@ def set_config():
     #where the hjp files are [base/lang/newspaper/issue/toc.xml]
     while True:
         try:
-            config['base'] = raw_input("Enter base directory of the source documents."                                       "\nCan be as far as 'base' in [base/lang/newspaper/issue/toc.xml]: ")
+            config['base'] = input("Enter base directory of the source documents."                                       "\nCan be as far as 'base' in [base/lang/newspaper/issue/toc.xml]: ")
         except Exception:
-            print error
+            print (error)
             continue
         break
     #depth
     while True:
         try:
-            config['depth'] = int(raw_input("Enter depth of the toc.xml from the base.\nIn the example above it is 4: "))
+            config['depth'] = int(input("Enter depth of the toc.xml from the base.\nIn the example above it is 4: "))
         except Exception:
-            print error
+            print (error)
             continue
         break
     #where pxml results are to be stored
@@ -303,56 +303,56 @@ def set_config():
     #transkribus credentials
     while True:
         try:
-            config['user'] = raw_input("Enter Transkribus username: ")
+            config['user'] = input("Enter Transkribus username: ")
             config['key'] = getpass.getpass("Enter Transkribus password: ")
         except Exception:
-            print error
+            print (error)
             continue
         break
     #transkribus collection id for our destination collection (make new collection here?)
     while True:
         try:
-            config['collection'] = raw_input("Enter Transkribus collection id, where the documents are to be added: ")
+            config['collection'] = input("Enter Transkribus collection id, where the documents are to be added: ")
         except Exception:
-            print error
+            print (error)
             continue
         break
     # transkribus upload info
     while True:
         try:
-            config['author'] = raw_input("Enter Transkribus author name: ")
-            config['upload_title'] = raw_input("Enter the title of this upload: ")
-            config['upload_desc'] = raw_input("Enter description of this upload: ")
+            config['author'] = input("Enter Transkribus author name: ")
+            config['upload_title'] = input("Enter the title of this upload: ")
+            config['upload_desc'] = input("Enter description of this upload: ")
             #choose the model you want--10163 is hameorerot
-            config['HTRmodelid'] = raw_input("Enter the HTRmodelid to be used: ")
+            config['HTRmodelid'] = input("Enter the HTRmodelid to be used: ")
         except Exception:
-            print error
+            print (error)
             continue
         break
     #run full pipeline or upload only
     while True:
         try:
-            upload_only = raw_input("Upload only instead of all pipeline processes? yes or no: ")
+            upload_only = input("Upload only instead of all pipeline processes? yes or no: ")
             if upload_only.lower() == "yes":
                 config['upload_only'] = True
             else:
                 config['upload_only'] = False
         except Exception:
-            print error
+            print (error)
             continue
         break
     # custom factors
     while True:
         try:
-            custom_factors = raw_input("Enter a list of custom factors in the following format [[resolution, factor1, factor2], ...]\nOr enter '1' to have them calculated for each document, or '0' to use defaults: ")
+            custom_factors = input("Enter a list of custom factors in the following format [[resolution, factor1, factor2], ...]\nOr enter '1' to have them calculated for each document, or '0' to use defaults: ")
             config['factors'] = custom_factors.strip()
             if config['factors'] == "1":
                 config['factors'] = True
                 while True:
                     try:
-                        config['sample_cnt'] = int(raw_input("Enter number of textblocks from which to compute the factors: "))
+                        config['sample_cnt'] = int(input("Enter number of textblocks from which to compute the factors: "))
                     except Exception:
-                        print error
+                        print (error)
                         continue
                     break
             elif config['factors'] == "0":
@@ -360,12 +360,12 @@ def set_config():
             else:
                 config['factors'] == ast.literal_eval(config['factors'])
         except Exception:
-            print error
+            print (error)
             continue
         break
     while True:
         try:
-            c = raw_input("Enter a filename to save these configurations, 'def' for default filename, or 'no' not to save them: ")
+            c = input("Enter a filename to save these configurations, 'def' for default filename, or 'no' not to save them: ")
             if c.lower() == "no":
                 config_f = False
             elif c.lower() != "def":
@@ -373,7 +373,7 @@ def set_config():
             else:
                 config_f = config_f_def
         except Exception:
-            print error
+            print (error)
             continue
         break
     if config_f is not False:
@@ -404,15 +404,15 @@ config_f = None
 if len(sys.argv) == 1:
     exists = os.path.isfile(config_f_def)
     if exists:
-        print "No config file specified. Using default."
+        print ("No config file specified. Using default.")
         try:
             with open(config_f_def, "rb") as f:
                 config = pickle.load(f)
         except Exception:
-            print "Pickled config file was too sour. Let's set them again."
+            print ("Pickled config file was too sour. Let's set them again.")
             config = set_config()
     else:
-        print "No config file specified and none found. Let's set them."
+        print ("No config file specified and none found. Let's set them.")
         config = set_config()
 # yes args
 elif len(sys.argv) > 1:
@@ -420,7 +420,7 @@ elif len(sys.argv) > 1:
         # flags
         if arg[0] == "-":
             if arg.find("h") > -1:
-                print help
+                print (help)
                 sys.exit(0)
             if arg.find("s") > -1:
                 save_changes = True
@@ -430,11 +430,11 @@ elif len(sys.argv) > 1:
         elif arg.find("=") > -1:
             if not any(config):
                 try:
-                    print "No config file specified. Using default."
+                    print ("No config file specified. Using default.")
                     with open(config_f_def, "rb") as f:
                         config = pickle.load(f)
                 except Exception:
-                    print "No config file specified and default not found. Let's set them again."
+                    print ("No config file specified and default not found. Let's set them again.")
                     config = set_config()
             kv = arg.split("=")
             if kv[0] == "depth":
@@ -451,14 +451,14 @@ elif len(sys.argv) > 1:
                     config = pickle.load(f)
                 config_f = arg
             except Exception:
-                print "The config file specified could not be used. Trying default."
+                print ("The config file specified could not be used. Trying default.")
                 try:
                     #try unpickleing default
                     with open(config_f_def, "rb") as f:
                         config = pickle.load(f)
                 except Exception as e:
-                    print "The default config file was also bad. Let's set them again."
-                    print e
+                    print ("The default config file was also bad. Let's set them again.")
+                    print (e)
                     config = set_config()
 if type(config) != dict or not any(config):
     try:
@@ -466,7 +466,7 @@ if type(config) != dict or not any(config):
         with open(config_f_def, "rb") as f:
             config = pickle.load(f)
     except Exception:
-        print "Config file corrupted. Let's set them again"
+        print ("Config file corrupted. Let's set them again")
         config = set_config()
 
 if save_changes:
@@ -521,9 +521,9 @@ for issue in data_dirs:
         page_list = get_pagelist(uploadid)
         baseline_jobid = base_line(uploadid, page_list)
         while tkbs.getJobStatus(tkbs.getJobIDsFromXMLStatuses(baseline_jobid)[0])['state'] == "RUNNING":
-            print "Waiting for baisline analysis to complete..."
+            print ("Waiting for baisline analysis to complete...")
             time.sleep(2)
-        print "Baseline analysis completed!"
+        print ("Baseline analysis completed!")
         download_tkbsdoc(uploadid)
         edit_baseline()
         ocr()
